@@ -6,9 +6,10 @@ import {
   MailCheck,
   BarChart3,
   Sparkles,
+  Bot,
 } from 'lucide-react';
 
-export type NavTab = 'dashboard' | 'agreements' | 'sign-portal' | 'email-logs' | 'reports';
+export type NavTab = 'dashboard' | 'agreements' | 'ai-chat' | 'sign-portal' | 'email-logs' | 'reports';
 
 interface SidebarProps {
   activeTab: NavTab;
@@ -33,6 +34,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: 'Agreements & Templates',
       icon: FileSignature,
       badge: pendingAgreementsCount > 0 ? pendingAgreementsCount : null,
+    },
+    {
+      id: 'ai-chat' as NavTab,
+      label: 'AI Template Architect',
+      icon: Bot,
+      badge: 'Gemini',
     },
     {
       id: 'sign-portal' as NavTab,

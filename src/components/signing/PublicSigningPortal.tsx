@@ -273,6 +273,63 @@ export const PublicSigningPortal: React.FC<PublicSigningPortalProps> = ({
     }
   };
 
+function getTrimmedSignatureDataUrl(sigCanvas: SignatureCanvas): string {
+  try {
+    const rawCanvas = sigCanvas.getCanvas();
+    if (!rawCanvas) return sigCanvas.toDataURL('image/png');
+
+    const ctx = rawCanvas.getContext('2d');
+    if (!ctx) return rawCanvas.toDataURL('image/png');
+
+    const width = rawCanvas.width;
+    const height = rawCanvas.height;
+    const imgData = ctx.getImageData(0, 0, width, height);
+    const data = imgData.data;
+
+    let minX = width;
+    let minY = height;
+    let maxX = 0;
+    let maxY = 0;
+    let hasPixels = false;
+
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const alpha = data[(y * width + x) * 4 + 3];
+        if (alpha > 0) {
+          hasPixels = true;
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+      }
+    }
+
+    if (!hasPixels) return rawCanvas.toDataURL('image/png');
+
+    const padding = 10;
+    const cropX = Math.max(0, minX - padding);
+    const cropY = Math.max(0, minY - padding);
+    const cropW = Math.min(width - cropX, maxX - minX + padding * 2);
+    const cropH = Math.min(height - cropY, maxY - minY + padding * 2);
+
+    const trimmedCanvas = document.createElement('canvas');
+    trimmedCanvas.width = cropW;
+    trimmedCanvas.height = cropH;
+
+    const trimmedCtx = trimmedCanvas.getContext('2d');
+    if (trimmedCtx) {
+      trimmedCtx.drawImage(rawCanvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+      return trimmedCanvas.toDataURL('image/png');
+    }
+
+    return rawCanvas.toDataURL('image/png');
+  } catch (err) {
+    console.warn('Canvas trimming fallback used:', err);
+    return sigCanvas.toDataURL ? sigCanvas.toDataURL('image/png') : '';
+  }
+}
+
   // Confirm Signature & Execute Contract
   const handleConfirmSignature = async () => {
     setSignError('');
@@ -283,7 +340,7 @@ export const PublicSigningPortal: React.FC<PublicSigningPortalProps> = ({
         setSignError('Please draw your hand signature on screen before proceeding.');
         return;
       }
-      signatureData = sigCanvasRef.current.getTrimmedCanvas().toDataURL('image/png');
+      signatureData = getTrimmedSignatureDataUrl(sigCanvasRef.current);
     } else if (signatureType === 'type') {
       if (!typedName.trim()) {
         setSignError('Please enter your full legal name.');

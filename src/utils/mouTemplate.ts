@@ -3,7 +3,7 @@ import { AgreementData } from '../types/crm';
 export const RED_FLAG_HOMES_COMPANY_INFO = {
   name: 'Red Flag Homes Network',
   tagline: 'Luxury Hospitality & Airbnb Property Management',
-  address: 'Level 4, Commercial Complex, Greater Kailash 2, New Delhi - 110048, India',
+  address: 'Guru Marg, Paschim Vihar, New Delhi',
   email: 'agreements@redflaghomes.in',
   phone: '+91 98765 43210',
   website: 'https://redflaghomes.in',

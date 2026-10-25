@@ -111,7 +111,7 @@ export const AgreementPreviewModal: React.FC<AgreementPreviewModalProps> = ({
         </div>
 
         {/* Printable Formal Document Preview Container */}
-        <div className="flex-1 overflow-y-auto p-6 sm:p-10 bg-white text-zinc-900 font-sans selection:bg-red-200 shadow-inner relative">
+        <div className="flex-1 overflow-y-auto p-6 sm:p-10 bg-white text-zinc-900 font-sans selection:bg-red-200 shadow-inner relative border-8 border-double border-zinc-200 m-2 sm:m-4 rounded-xl">
           {/* Watermark */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none opacity-[0.03] rotate-[-30deg]">
             <span className="text-8xl font-black tracking-widest text-zinc-900 uppercase">
@@ -120,21 +120,23 @@ export const AgreementPreviewModal: React.FC<AgreementPreviewModalProps> = ({
           </div>
 
           {/* Document Header */}
-          <div className="border-b-2 border-red-600 pb-6 mb-8 flex flex-col sm:flex-row sm:items-start justify-between gap-6 relative z-10">
+          <div className="border-b-2 border-red-600 pb-6 mb-6 flex flex-col sm:flex-row sm:items-start justify-between gap-6 relative z-10">
             <div className="space-y-1">
               <RedFlagLogo size="lg" variant="dark" />
-              <p className="text-[11px] text-zinc-500 max-w-md pt-2 leading-relaxed">
-                {RED_FLAG_HOMES_COMPANY_INFO.address} · {RED_FLAG_HOMES_COMPANY_INFO.email}
+              <p className="text-xs text-zinc-600 font-medium max-w-md pt-2 leading-relaxed">
+                <span className="font-bold text-zinc-900">{RED_FLAG_HOMES_COMPANY_INFO.address}</span>
+                <br />
+                Official Desk: {RED_FLAG_HOMES_COMPANY_INFO.email} · Web: {RED_FLAG_HOMES_COMPANY_INFO.website}
               </p>
             </div>
 
             {/* Document Metadata & QR Code */}
             <div className="flex items-start gap-4">
               <div className="text-right text-xs space-y-1 font-mono">
-                <div className="font-extrabold text-red-600 text-sm">{agreement.id}</div>
+                <div className="font-black text-red-600 text-base">{agreement.id}</div>
                 <div className="text-zinc-600">Effective: {agreement.effectiveDate}</div>
                 <div className="text-zinc-500 text-[10px] uppercase font-sans font-bold">
-                  Status: <span className="text-amber-700">{agreement.status}</span>
+                  Status: <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">{agreement.status}</span>
                 </div>
               </div>
 
@@ -146,6 +148,26 @@ export const AgreementPreviewModal: React.FC<AgreementPreviewModalProps> = ({
                   </span>
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Commercial Split Highlights Card */}
+          <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-red-50 via-zinc-50 to-amber-50 border border-zinc-200 flex flex-wrap items-center justify-between gap-4 text-xs">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-red-600 text-white rounded-lg font-black text-xs">MOU</div>
+              <div>
+                <span className="font-extrabold text-zinc-900 text-sm block">Memorandum of Understanding</span>
+                <span className="text-zinc-600">Listing & Property Management Agreement</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1.5 rounded-lg bg-white border border-zinc-300 font-mono font-bold text-zinc-800">
+                Owner Share: <strong className="text-red-600">{agreement.ownerPercent || 83}%</strong>
+              </span>
+              <span className="px-3 py-1.5 rounded-lg bg-white border border-zinc-300 font-mono font-bold text-zinc-800">
+                Red Flag Homes Share: <strong className="text-zinc-900">{agreement.commissionPercent || agreement.coHostPercent || 17}%</strong>
+              </span>
             </div>
           </div>
 

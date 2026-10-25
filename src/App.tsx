@@ -11,6 +11,7 @@ import { ReportsView } from './components/reports/ReportsView';
 import { EmailLogsView } from './components/email/EmailLogsView';
 import { NotificationDrawer } from './components/notifications/NotificationDrawer';
 import { GlobalSearchModal } from './components/common/GlobalSearchModal';
+import { TemplateChatbot, GeneratedTemplateData } from './components/chat/TemplateChatbot';
 
 import {
   INITIAL_LEADS,
@@ -295,6 +296,22 @@ export default function App() {
                 />
               )}
             </div>
+          )}
+
+          {activeTab === 'ai-chat' && (
+            <TemplateChatbot
+              onSaveTemplateToCRM={(tpl) => {
+                const notif: SystemNotification = {
+                  id: `notif_tpl_${Date.now()}`,
+                  title: 'New AI Template Added',
+                  message: `Template "${tpl.title}" created via Gemini AI Architect and added to generator.`,
+                  timestamp: new Date().toISOString(),
+                  type: 'opened',
+                  read: false,
+                };
+                setNotifications((prev) => [notif, ...prev]);
+              }}
+            />
           )}
 
           {activeTab === 'email-logs' && (

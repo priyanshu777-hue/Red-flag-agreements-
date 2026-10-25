@@ -1,6 +1,7 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { GoogleGenAI } from '@google/genai';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -138,6 +139,128 @@ app.post('/api/email/send', async (req, res) => {
     attachments: attachments || ['Signed_MOU_Agreement.pdf', 'Audit_Certificate.pdf'],
   });
 });
+
+// AI Template Chatbot Route using @google/genai SDK
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY || '',
+  httpOptions: {
+    headers: {
+      'User-Agent': 'aistudio-build',
+    },
+  },
+});
+
+app.post('/api/gemini/template-chat', async (req, res) => {
+  const { messages, model } = req.body;
+
+  if (!messages || !Array.isArray(messages) || messages.length === 0) {
+    return res.status(400).json({ error: 'Messages array is required' });
+  }
+
+  // Model selection:
+  // gemini-3.8-flash for general tasks
+  // gemini-3.1-flash-lite for fast tasks
+  // gemini-4-argon for complex legal tasks
+  const selectedModel = model || 'gemini-3.8-flash';
+
+  const systemInstruction = `You are the Red Flag Homes AI Template Architect. Your job is to help sales managers, legal advisors, and executives generate, customize, and refine Memorandum of Understanding (MOU) and agreement templates for property management and listing in India.
+
+When the user requests a new template or modifications to a template, respond with helpful advisory text AND ALWAYS include a structured JSON block inside \`\`\`json_template ... \`\`\`.
+
+Example JSON Template Structure:
+\`\`\`json_template
+{
+  "title": "Generated Template Title (e.g. Ultra-Luxury Villa 85/15 MOU)",
+  "type": "mou",
+  "category": "Listing MOU / Property Management / Co-Hosting Partnership",
+  "description": "Brief description of the generated template terms and payout split.",
+  "ownerPercent": 85,
+  "commissionPercent": 15,
+  "lockInPeriod": "6 months",
+  "noticePeriod": "30 days",
+  "keyClauses": [
+    "1. Exclusive Listing & Marketing Rights: Red Flag Homes manages listing on Airbnb & OTA platforms.",
+    "2. Revenue Share & Monthly Payouts: 85% directly to Property Owner, 15% co-hosting commission to Red Flag Homes.",
+    "3. Maintenance & Inventory Protection: Property damage coverage and routine inspection protocols."
+  ]
+}
+\`\`\`
+
+Maintain an expert, professional, and efficient legal tone. Answer follow-up questions and refine parameters as requested.`;
+
+  if (process.env.GEMINI_API_KEY) {
+    try {
+      const contents = messages.map((m: { role: string; content: string }) => ({
+        role: m.role === 'model' || m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: m.content }],
+      }));
+
+      const response = await ai.models.generateContent({
+        model: selectedModel,
+        contents,
+        config: {
+          systemInstruction,
+          temperature: 0.7,
+        },
+      });
+
+      const reply = response.text || 'Template generated successfully.';
+
+      return res.json({
+        success: true,
+        reply,
+        modelUsed: selectedModel,
+      });
+    } catch (err: any) {
+      console.error('Gemini API Error:', err);
+    }
+  }
+
+  // Smart fallback template generator when API key is not present or offline
+  const lastUserMsg = messages.filter((m: any) => m.role === 'user').pop()?.content || 'Template Request';
+
+  let ownerPct = 85;
+  let commPct = 15;
+  const match = lastUserMsg.match(/(\d{2})[\s/]+(\d{2})/);
+  if (match) {
+    const p1 = parseInt(match[1], 10);
+    const p2 = parseInt(match[2], 10);
+    if (p1 + p2 === 100) {
+      ownerPct = p1;
+      commPct = p2;
+    }
+  }
+
+  const fallbackReply = `Here is your customized Red Flag Homes agreement template generated based on your prompt: **"${lastUserMsg}"**.
+
+\`\`\`json_template
+{
+  "title": "Custom ${lastUserMsg.slice(0, 35)} Agreement",
+  "type": "mou",
+  "category": "Custom Property Management MOU",
+  "description": "Tailored agreement template with ${ownerPct}% Owner / ${commPct}% Red Flag Homes revenue split generated from prompt.",
+  "ownerPercent": ${ownerPct},
+  "commissionPercent": ${commPct},
+  "lockInPeriod": "6 months",
+  "noticePeriod": "30 days",
+  "keyClauses": [
+    "1. Revenue Split: ${ownerPct}% payout to Property Owner, ${commPct}% commission to Red Flag Homes.",
+    "2. Onboarding & Verification: Client profile, live selfie, and asset inventory verification mandatory.",
+    "3. Termination & Notice: 30 days written notice required after lock-in period."
+  ]
+}
+\`\`\`
+
+You can review the generated template card above and click **"✨ Add Template to CRM Generator"** to use it immediately for creating client agreements!`;
+
+  return res.json({
+    success: true,
+    reply: fallbackReply,
+    modelUsed: selectedModel,
+    fallback: true,
+  });
+});
+
 
 async function startServer() {
   if (process.env.NODE_ENV !== 'production') {
