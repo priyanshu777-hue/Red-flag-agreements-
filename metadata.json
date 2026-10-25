@@ -1,0 +1,6 @@
+{
+  "name": "Red Flag Homes - Internal Sales Closing CRM & E-Sign",
+  "description": "Premium internal web application for Red Flag Homes sales team to manage leads, generate MOU agreements, and collect digital signatures with full audit trail.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
